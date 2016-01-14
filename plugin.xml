@@ -44,18 +44,16 @@
         <source-file src="src/android/sonic/AndroidAudioDevice.java" target-dir="src/org/vinuxproject/sonic" />
         <source-file src="src/android/sonic/Sonic.java" target-dir="src/org/vinuxproject/sonic" />
         
-        <source-file src="src/android/gdx/analysis/AudioTools.java" target-dir="src/com/badlogic/gdx/audio/analysis" />
-        <source-file src="src/android/gdx/analysis/FFT.java" target-dir="src/com/badlogic/gdx/audio/analysis" />
-        <source-file src="src/android/gdx/analysis/FourierTransform.java" target-dir="src/com/badlogic/gdx/audio/analysis" />
-        <source-file src="src/android/gdx/analysis/KissFFT.java" target-dir="src/com/badlogic/gdx/audio/analysis" />
-        <source-file src="src/android/gdx/io/Decoder.java" target-dir="src/com/badlogic/gdx/audio/io" />
-        <source-file src="src/android/gdx/io/Mpg123Decoder.java" target-dir="src/com/badlogic/gdx/audio/io" />
-        <source-file src="src/android/gdx/io/VorbisDecoder.java" target-dir="src/com/badlogic/gdx/audio/io" />
-        <source-file src="src/android/gdx/io/WavDecoder.java" target-dir="src/com/badlogic/gdx/audio/io" />
-        <source-file src="src/android/gdx/transform/SoundTouch.java" target-dir="src/com/badlogic/gdx/audio/transform" />
-        <source-file src="src/android/gdx/AudioBuild.java" target-dir="src/com/badlogic/gdx/audio" />
-        <source-file src="src/android/gdx/CircularBuffer.java" target-dir="src/com/badlogic/gdx/audio" />
-        <source-file src="src/android/gdx/CircularFloatBuffer.java" target-dir="src/com/badlogic/gdx/audio" />
+        <source-file src="src/android/gdx/audio/io/Decoder.java" target-dir="src/com/badlogic/gdx/audio/io" />
+        <source-file src="src/android/gdx/audio/io/Mpg123Decoder.java" target-dir="src/com/badlogic/gdx/audio/io" />
+        <source-file src="src/android/gdx/files/FileHandle.java" target-dir="src/com/badlogic/gdx/files" />
+        <source-file src="src/android/gdx/utils/Disposable.java" target-dir="src/com/badlogic/gdx/utils" />
+        <source-file src="src/android/gdx/utils/GdxRuntimeException.java" target-dir="src/com/badlogic/gdx/utils" />
+        <source-file src="src/android/gdx/utils/SharedLibraryLoader.java" target-dir="src/com/badlogic/gdx/utils" />
+        <source-file src="src/android/gdx/utils/StreamUtils.java" target-dir="src/com/badlogic/gdx/utils" />
+        <source-file src="src/android/gdx/utils/StringBuilder.java" target-dir="src/com/badlogic/gdx/utils" />
+        <source-file src="src/android/gdx/Files.java" target-dir="src/com/badlogic/gdx" />
+        <source-file src="src/android/gdx/Gdx.java" target-dir="src/com/badlogic/gdx" />
         
         <source-file src="src/android-ndk/armeabi/libgdx-audio.so" target-dir="libs/armeabi" />
         <source-file src="src/android-ndk/armeabi/libsonic_jni.so" target-dir="libs/armeabi" />
