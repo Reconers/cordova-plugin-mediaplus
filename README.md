@@ -23,14 +23,7 @@
 어학 학습기를 위해서 android 내 rate가 가능토록 하며,
 ios내에선 Media 라이브러리로 자동 연결해 주는 플러그인입니다.
 
-This plugin defines a global `Media` Constructor.
-
-Although in the global scope, it is not available until after the `deviceready` event.
-
-    document.addEventListener("deviceready", onDeviceReady, false);
-    function onDeviceReady() {
-        console.log(Media);
-    }
+현재 플러그인은 MediaPlus로 생성하여 처리해야합니다.
 
 ## Installation
 
@@ -45,7 +38,7 @@ Although in the global scope, it is not available until after the `deviceready` 
 
 ## Media
 
-    var media = new Media(src, mediaSuccess, [mediaError], [mediaStatus]);
+    var media = new MediaPlus(src, mediaSuccess, [mediaError], [mediaStatus]);
 
 ### Parameters
 
@@ -59,7 +52,7 @@ Although in the global scope, it is not available until after the `deviceready` 
 
 __NOTE__: `http or https` path is supported as `src` parameter:
 ```javascript
-var my_media = new Media('http://www.reconers.com/recording.mp3', ...);
+var my_media = new MediaPlus('http://www.reconers.com/recording.mp3', ...);
 ```
 
 ### Constants
@@ -115,7 +108,7 @@ Returns the current position within an audio file.  Also updates the `Media` obj
 
     // Audio player
     //
-    var my_media = new Media(src, onSuccess, onError);
+    var my_media = new MediaPlus(src, onSuccess, onError);
 
     // Update media position every second
     var mediaTimer = setInterval(function () {
@@ -146,7 +139,7 @@ Returns the duration of an audio file in seconds. If the duration is unknown, it
 
     // Audio player
     //
-    var my_media = new Media(src, onSuccess, onError);
+    var my_media = new MediaPlus(src, onSuccess, onError);
 
     // Get duration
     var counter = 0;
@@ -176,7 +169,7 @@ Pauses playing an audio file.
     //
     function playAudio(url) {
         // Play the audio file at url
-        var my_media = new Media(url,
+        var my_media = new MediaPlus(url,
             // success callback
             function () { console.log("playAudio():Audio Success"); },
             // error callback
@@ -206,7 +199,7 @@ Starts or resumes playing an audio file.
     //
     function playAudio(url) {
         // Play the audio file at url
-        var my_media = new Media(url,
+        var my_media = new MediaPlus(url,
             // success callback
             function () {
                 console.log("playAudio():Audio Success");
@@ -234,7 +227,7 @@ function for any `Media` resource that is no longer needed.
 
     // Audio player
     //
-    var my_media = new Media(src, onSuccess, onError);
+    var my_media = new MediaPlus(src, onSuccess, onError);
 
     my_media.play();
     my_media.stop();
@@ -256,7 +249,7 @@ Sets the current position within an audio file.
 
     // Audio player
     //
-    var my_media = new Media(src, onSuccess, onError);
+    var my_media = new MediaPlus(src, onSuccess, onError);
         my_media.play();
     // SeekTo to 10 seconds after 5 seconds
     setTimeout(function() {
@@ -277,7 +270,7 @@ Stops playing an audio file.
     //
     function playAudio(url) {
         // Play the audio file at url
-        var my_media = new Media(url,
+        var my_media = new MediaPlus(url,
             // success callback
             function() {
                 console.log("playAudio():Audio Success");
