@@ -88,7 +88,9 @@ public class MediaPlus extends CordovaPlugin {
         PluginResult.Status status = PluginResult.Status.OK;
 
         if ("create".equals(action)) {
-            this.playerState = STOP;
+
+            Log.d("MUSIC", "CREATE!!!");
+            this.stop();
             this.filepath = args.getString(0).substring(7);
 
             this.totalSamples = 0;
@@ -100,6 +102,9 @@ public class MediaPlus extends CordovaPlugin {
             this.channels = this.mpg123Decoder.getChannels();
             this.totallength = ((int)this.mpg123Decoder.getLength());
             this.rate1 = this.mpg123Decoder.getRate();
+
+            samples = new byte[8092];
+            modifiedSamples = new byte[2048];
 
             this.device = new AndroidAudioDevice(this.rate1, this.channels);
             this.sonic = new Sonic(this.rate1, this.channels);
@@ -134,10 +139,8 @@ public class MediaPlus extends CordovaPlugin {
             return true;
         }
         else if ("release".equals(action)) {
+            speed = 1.0f;
             this.stop();
-            this.sonic.close();
-            this.mpg123Decoder.dispose();
-            this.fileHandle.delete();
             return true;
         }
         else if ("seekToAudio".equals(action)) {
@@ -157,7 +160,19 @@ public class MediaPlus extends CordovaPlugin {
         this.playerState = ISPLAYING;
         sendStatusChange(MEDIA_STATE, null, 2.0f);
 
-        if (this.thread != null) return;
+        if (this.thread != null) {
+            try
+            {
+                Thread.sleep(2000L);
+                Log.d("aaa", "stop..........." + this.device.track.getPlayState());
+                Log.d("aaa", "not init");
+            }
+            catch (InterruptedException localInterruptedException)
+            {
+                localInterruptedException.printStackTrace();
+            }
+            return;
+        }
 
         this.thread = new Thread(new Runnable() {
             public void run() {
@@ -167,6 +182,7 @@ public class MediaPlus extends CordovaPlugin {
                 int bytesRead;
                 while(true) {
                     if (playerState == PAUSE) continue;
+                    if (playerState == STOP) break;
 
                     if (skipAmount != 0) {
                         int i = skipAmount;
@@ -180,29 +196,29 @@ public class MediaPlus extends CordovaPlugin {
 
                     if (bytesRead > 0) {
                         sonic.putBytes(samples, bytesRead);
+
+                        int available = sonic.availableBytes();
+                        if (available > 0)
+                        {
+                            if (modifiedSamples.length < available) {
+                                modifiedSamples = new byte[available * 2];
+                            }
+                            sonic.receiveBytes(modifiedSamples, available);
+                            if ((device != null) && (device.track.getPlayState() == 3)) {
+                                device.writeSamples(modifiedSamples, available);
+                            }
+                        }
+
+                        currentposition = totalSamples / (rate1 * channels);
+                        sendStatusChange(MEDIA_POSITION, null, (float) currentposition);
                     }
                     else {
                         sonic.flush();
                     }
 
-                    int available = sonic.availableBytes();
-                    if (available > 0)
-                    {
-                        if (modifiedSamples.length < available) {
-                            modifiedSamples = new byte[available * 2];
-                        }
-                        sonic.receiveBytes(modifiedSamples, available);
-                        if ((device != null) && (device.track.getPlayState() == 3)) {
-                            device.writeSamples(modifiedSamples, available);
-                        }
-                    }
-
-                    currentposition = totalSamples / (rate1 * channels);
-                    sendStatusChange(MEDIA_POSITION, null, (float) currentposition);
                     if (bytesRead <= 0) break;
                 }
 
-                device.flush();
                 playerState = PLAY_END;
                 stop();
             }
@@ -214,16 +230,22 @@ public class MediaPlus extends CordovaPlugin {
 
     public void stop()
     {
+        Log.d("MUSIC", "STOP..");
         this.playerState = STOP;
         sendStatusChange(MEDIA_STATE, null, 4.0f);
+
         if (this.device != null)
         {
             this.device.track.flush();
-            this.device.track.stop();
-            this.device.track.release();
             this.device.track = null;
             this.device = null;
         }
+
+        if (this.mpg123Decoder != null) {
+//            mpg123Decoder.dispose();
+            mpg123Decoder = null;
+        }
+
         this.thread = null;
     }
 
