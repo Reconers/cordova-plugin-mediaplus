@@ -23,7 +23,7 @@ var argscheck = require('cordova/argscheck'),
     utils = require('cordova/utils'),
     exec = require('cordova/exec');
 
-var mediaObjects = {};
+var mediaObject = null;
 
 /**
  * This class provides access to the device media, interfaces to both sound and video
@@ -39,28 +39,28 @@ var mediaObjects = {};
  */
 var MediaPlus = function(src, successCallback, errorCallback, statusCallback) {
 
+    if (mediaObject) {
+        mediaObject.release();
+    }
+
     this.successCallback = successCallback;
     this.errorCallback = errorCallback;
     this.statusCallback = statusCallback;
     this._duration = -1;
     this._position = -1;
 
-    var that = this;
+    mediaObject = this;
+
+    var me = this;
 
     var fileTransfer = new FileTransfer();
     var uri = encodeURI(src);
     var fileURL = "cdvfile://localhost/temporary/slk_music/" + src.substring(src.lastIndexOf("/") + 1);
 
     fileTransfer.download(uri, fileURL, function(entry) {
-        that.src = entry.toURL();
-        exec(successCallback, errorCallback, "MediaPlus", "create", [that.src]);
-    },
-    function(error) {
-        console.log("download error source " + error.source);
-        console.log("download error target " + error.target);
-        console.log("upload error code" + error.code);
-    },
-    false, { });
+        me.src = entry.toURL();
+        exec(successCallback, errorCallback, "MediaPlus", "create", [me.src]);
+    }, errorCallback, false, { });
 
 };
 
@@ -78,11 +78,6 @@ MediaPlus.MEDIA_PAUSED = 3;
 MediaPlus.MEDIA_STOPPED = 4;
 MediaPlus.MEDIA_MSG = ["None", "Starting", "Running", "Paused", "Stopped"];
 
-// "static" function to return existing objs.
-MediaPlus.get = function(id) {
-    return mediaObjects[id];
-};
-
 /**
  * Start or resume playing audio file.
  */
@@ -97,7 +92,7 @@ MediaPlus.prototype.stop = function() {
     var me = this;
     exec(function() {
         me._position = 0;
-    }, this.errorCallback, "MediaPlus", "stopPlayingAudio", [this.id]);
+    }, this.errorCallback, "MediaPlus", "stopPlayingAudio", []);
 };
 
 /**
@@ -114,7 +109,7 @@ MediaPlus.prototype.seekTo = function(milliseconds) {
  * Pause playing audio file.
  */
 MediaPlus.prototype.pause = function() {
-    exec(null, this.errorCallback, "MediaPlus", "pausePlayingAudio", [this.id]);
+    exec(null, this.errorCallback, "MediaPlus", "pausePlayingAudio", []);
 };
 
 /**
@@ -140,14 +135,14 @@ MediaPlus.prototype.getCurrentPosition = function(success, fail) {
     exec(function(p) {
         me._position = p;
         success(p);
-    }, fail, "MediaPlus", "getCurrentPositionAudio", [this.id]);
+    }, fail, "MediaPlus", "getCurrentPositionAudio", []);
 };
 
 /**
  * Release the resources.
  */
 MediaPlus.prototype.release = function() {
-    exec(null, this.errorCallback, "MediaPlus", "release", [this.id]);
+    exec(null, this.errorCallback, "MediaPlus", "release", []);
 };
 
 /**
@@ -160,7 +155,7 @@ MediaPlus.prototype.release = function() {
  */
 MediaPlus.onStatus = function(id, msgType, value) {
 
-    var media = mediaObjects[id];
+    var media = mediaObject;
 
     if(media) {
         switch(msgType) {
@@ -197,7 +192,7 @@ module.exports = MediaPlus;
 
 function onMessageFromNative(msg) {
     if (msg.action == 'status') {
-        Media.onStatus(msg.status.id, msg.status.msgType, msg.status.value);
+        MediaPlus.onStatus(msg.status.id, msg.status.msgType, msg.status.value);
     } else {
         throw new Error('Unknown media action' + msg.action);
     }
@@ -207,11 +202,12 @@ if (cordova.platformId === 'android' || cordova.platformId === 'amazon-fireos' |
 
     var channel = require('cordova/channel');
 
-    channel.createSticky('onMediaPluginReady');
-    channel.waitForInitialization('onMediaPluginReady');
+    channel.createSticky('onMediaPlusPluginReady');
+    channel.waitForInitialization('onMediaPlusPluginReady');
 
     channel.onCordovaReady.subscribe(function() {
         exec(onMessageFromNative, undefined, 'MediaPlus', 'messageChannel', []);
-        channel.initializationComplete('onMediaPluginReady');
+        channel.initializationComplete('onMediaPlusPluginReady');
     });
 }
+

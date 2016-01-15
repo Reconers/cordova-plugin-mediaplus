@@ -12,6 +12,7 @@ import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.PluginResult;
+import org.apache.cordova.media.AudioPlayer;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,6 +20,7 @@ import org.vinuxproject.sonic.AndroidAudioDevice;
 import org.vinuxproject.sonic.Sonic;
 
 import java.io.File;
+import java.util.HashMap;
 
 /**
  * Created by moonsuhan on 2016. 1. 14..
@@ -26,6 +28,8 @@ import java.io.File;
 public class MediaPlus extends CordovaPlugin {
 
     private static final String LOG_TAG = "MediaPlus";
+
+    HashMap<String, AudioPlayer> players;
 
     public static final int ISPLAYING = 1;
     public static final int PAUSE = 2;
@@ -73,7 +77,6 @@ public class MediaPlus extends CordovaPlugin {
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-
 
     }
 
