@@ -14,6 +14,7 @@ import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.vinuxproject.sonic.AndroidAudioDevice;
 import org.vinuxproject.sonic.Sonic;
 
@@ -24,12 +25,20 @@ import java.io.File;
  */
 public class MediaPlus extends CordovaPlugin {
 
+    private static final String LOG_TAG = "MediaPlus";
 
     public static final int ISPLAYING = 1;
     public static final int PAUSE = 2;
     public static final int PLAY_END = 3;
-    public static final int RESOLVE = 4;
     public static final int STOP = 0;
+
+    private static int MEDIA_STATE = 1;
+    private static int MEDIA_DURATION = 2;
+    private static int MEDIA_POSITION = 3;
+    private static int MEDIA_ERROR = 9;
+
+
+    private CallbackContext messageChannel;
 
     int channels;
 
@@ -95,31 +104,46 @@ public class MediaPlus extends CordovaPlugin {
             this.sonic.setPitch(this.pitch);
             this.sonic.setVolume(1.0f);
 
+            sendStatusChange(MEDIA_DURATION, null, (float) this.totallength);
+
             callbackContext.sendPluginResult(new PluginResult(status, "ok"));
+            return true;
         }
         else if ("startPlayingAudio".equals(action)) {
             this.play();
+            return true;
         }
         else if ("pausePlayingAudio".equals(action)) {
             this.playerState = PAUSE;
+            sendStatusChange(MEDIA_STATE, null, 3.0f);
+            return true;
         }
         else if ("stopPlayingAudio".equals(action)) {
             this.stop();
+            return true;
         }
         else if ("setRate".equals(action)) {
             this.setSpeed((float) args.getDouble(0));
+            return true;
         }
         else if ("getCurrentPositionAudio".equals(action)) {
             callbackContext.sendPluginResult(new PluginResult(status, this.currentposition));
+            return true;
         }
         else if ("release".equals(action)) {
             this.stop();
             this.sonic.close();
             this.mpg123Decoder.dispose();
             this.fileHandle.delete();
+            return true;
         }
         else if ("seekToAudio".equals(action)) {
             this.skip(args.getInt(0));
+            return true;
+        }
+        else if (action.equals("messageChannel")) {
+            messageChannel = callbackContext;
+            return true;
         }
 
         return super.execute(action, args, callbackContext);
@@ -128,6 +152,7 @@ public class MediaPlus extends CordovaPlugin {
     public void play()
     {
         this.playerState = ISPLAYING;
+        sendStatusChange(MEDIA_STATE, null, 2.0f);
 
         if (this.thread != null) return;
 
@@ -170,6 +195,7 @@ public class MediaPlus extends CordovaPlugin {
                     }
 
                     currentposition = totalSamples / (rate1 * channels);
+                    sendStatusChange(MEDIA_POSITION, null, (float) currentposition);
                     if (bytesRead <= 0) break;
                 }
 
@@ -186,6 +212,7 @@ public class MediaPlus extends CordovaPlugin {
     public void stop()
     {
         this.playerState = STOP;
+        sendStatusChange(MEDIA_STATE, null, 4.0f);
         if (this.device != null)
         {
             this.device.track.flush();
@@ -214,5 +241,43 @@ public class MediaPlus extends CordovaPlugin {
         if (this.sonic != null) this.sonic.setSpeed(speed);
     }
 
+    private void sendStatusChange(int messageType, Integer additionalCode, Float value) {
+
+        if (additionalCode != null && value != null) {
+            throw new IllegalArgumentException("Only one of additionalCode or value can be specified, not both");
+        }
+
+        JSONObject statusDetails = new JSONObject();
+        try {
+            statusDetails.put("msgType", messageType);
+            if (additionalCode != null) {
+                JSONObject code = new JSONObject();
+                code.put("code", additionalCode.intValue());
+                statusDetails.put("value", code);
+            }
+            else if (value != null) {
+                statusDetails.put("value", value.floatValue());
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Failed to create status details", e);
+        }
+
+        JSONObject message = new JSONObject();
+        try {
+            message.put("action", "status");
+            if (statusDetails != null) {
+                message.put("status", statusDetails);
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Failed to create event message", e);
+        }
+
+        PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, message);
+        pluginResult.setKeepCallback(true);
+        if (messageChannel != null) {
+            messageChannel.sendPluginResult(pluginResult);
+        }
+
+    }
 
 }

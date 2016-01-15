@@ -190,4 +190,28 @@ MediaPlus.onStatus = function(id, msgType, value) {
 
 };
 
+
+
 module.exports = MediaPlus;
+
+
+function onMessageFromNative(msg) {
+    if (msg.action == 'status') {
+        Media.onStatus(msg.status.id, msg.status.msgType, msg.status.value);
+    } else {
+        throw new Error('Unknown media action' + msg.action);
+    }
+}
+
+if (cordova.platformId === 'android' || cordova.platformId === 'amazon-fireos' || cordova.platformId === 'windowsphone') {
+
+    var channel = require('cordova/channel');
+
+    channel.createSticky('onMediaPluginReady');
+    channel.waitForInitialization('onMediaPluginReady');
+
+    channel.onCordovaReady.subscribe(function() {
+        exec(onMessageFromNative, undefined, 'MediaPlus', 'messageChannel', []);
+        channel.initializationComplete('onMediaPluginReady');
+    });
+}
