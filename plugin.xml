@@ -36,11 +36,11 @@
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="MediaPlus">
-                <param name="android-package" value="com.reconers.mediaplus.MediaPlus"/>
+                <param name="android-package" value="com.reconers.cordova.mediaplus.MediaPlus"/>
             </feature>
         </config-file>
 
-        <source-file src="src/android/MediaPlus.java" target-dir="src/com/reconers/mediaplus" />
+        <source-file src="src/android/MediaPlus.java" target-dir="src/com/reconers/cordova/mediaplus" />
         
         <source-file src="src/android/sonic/AndroidAudioDevice.java" target-dir="src/org/vinuxproject/sonic" />
         <source-file src="src/android/sonic/Sonic.java" target-dir="src/org/vinuxproject/sonic" />

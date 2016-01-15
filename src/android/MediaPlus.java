@@ -1,4 +1,4 @@
-package com.reconers.mediaplus;
+package com.reconers.cordova.mediaplus;
 
 import android.os.Handler;
 import android.os.Message;
@@ -170,7 +170,6 @@ public class MediaPlus extends CordovaPlugin {
                     }
 
                     currentposition = totalSamples / (rate1 * channels);
-                    Log.d("MEDIA", String.valueOf(currentposition));
                     if (bytesRead <= 0) break;
                 }
 
