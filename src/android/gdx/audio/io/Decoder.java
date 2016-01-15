@@ -36,30 +36,30 @@ import com.badlogic.gdx.utils.Disposable;
 
 /** Abstract class for audio decoders that return successive amplitude frames. When a decoder is no longer used it has to be
  * disposed.
- * 
+ *
  * @author badlogicgames@gmail.com */
 public abstract class Decoder implements Disposable {
 	/** Reads in samples.capacity() samples in 16-bit signed PCM short format from the decoder. Returns the actual number read in.
 	 * If this number is smaller than the capacity of the buffer then the end of stream has been reached.
-	 * 
+	 *
 	 * @param samples The number of samples to read.
 	 * @param offset the offset at which to start writting samples to
 	 * @return the number of samples read, < numSamples means end of file */
-	public abstract int readSamples (short[] samples, int offset, int numSamples);
+	public abstract int readSamples (byte[] samples, int offset, int numSamples);
 
-	private short[] readBuffer;
+	private byte[] readBuffer;
 	private int channels;
 
 	/** Reads in the entire sound file into a single short[] array. */
-	public short[] readAllSamples () {
-		short[] out = new short[(int)Math.ceil(getLength() * getRate() * getChannels())];
-		short[] buffer = new short[1024 * 5];
+	public byte[] readAllSamples () {
+		byte[] out = new byte[(int)Math.ceil(getLength() * getRate() * getChannels())];
+		byte[] buffer = new byte[1024 * 5];
 		int readSamples = 0;
 		int totalSamples = 0;
 
 		while ((readSamples = readSamples(buffer, 0, buffer.length)) > 0) {
 			if (readSamples + totalSamples >= out.length) {
-				short[] tmp = new short[readSamples + totalSamples];
+				byte[] tmp = new byte[readSamples + totalSamples];
 				System.arraycopy(out, 0, tmp, 0, totalSamples);
 				out = tmp;
 			}
@@ -68,7 +68,7 @@ public abstract class Decoder implements Disposable {
 		}
 
 		if (out.length != totalSamples) {
-			short[] tmp = new short[totalSamples];
+			byte[] tmp = new byte[totalSamples];
 			System.arraycopy(out, 0, tmp, 0, totalSamples);
 			out = tmp;
 		}
@@ -77,18 +77,18 @@ public abstract class Decoder implements Disposable {
 	}
 
 	/** Skips numSamples samples. If the decoded file is in stereo the left and right channel samples are counted as 2 samples.
-	 * 
+	 *
 	 * @param numSamples the number of samples to skip
 	 * @return the number of samples actually skipped. If this is < numSamples then the end of the file has been reached. */
 	public abstract int skipSamples (int numSamples);
-	
+
 	/** @return	True if the methods {@link #setPosition(float)} and {@link #getPosition()} can be used, false otherwise. */
 	public abstract boolean canSeek();
-	
+
 	/** Sets the current position within the file to the specified value if supported
 	 * @return True if successful, false otherwise */
 	public abstract boolean setPosition(float seconds);
-	
+
 	/** @return The current position (in seconds) within the decoder or negative if not supported. */
 	public abstract float getPosition();
 

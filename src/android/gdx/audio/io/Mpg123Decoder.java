@@ -54,7 +54,7 @@ public class Mpg123Decoder extends Decoder {
 	}
 
 	@Override
-	public int readSamples (short[] samples, int offset, int numSamples) {
+	public int readSamples (byte[] samples, int offset, int numSamples) {
 		int read = readSamples(handle, samples, offset, numSamples);
 		return read;
 	}
@@ -187,7 +187,7 @@ public class Mpg123Decoder extends Decoder {
 		return (jlong)mp3;
 	*/
 
-	private native int readSamples (long handle, short[] buffer, int offset, int numSamples); /*	
+	private native int readSamples (long handle, byte[] buffer, int offset, int numSamples); /*
 		Mp3File* mp3 = (Mp3File*)handle;
 		short* target = buffer + offset;
 	
