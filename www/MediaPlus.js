@@ -161,9 +161,6 @@ MediaPlus.onStatus = function(id, msgType, value) {
         switch(msgType) {
             case Media.MEDIA_STATE :
                 media.statusCallback && media.statusCallback(value);
-                if(value == Media.MEDIA_STOPPED) {
-                    media.successCallback && media.successCallback();
-                }
                 break;
             case Media.MEDIA_DURATION :
                 media._duration = value;
