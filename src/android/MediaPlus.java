@@ -1,7 +1,7 @@
 package com.reconers.cordova.mediaplus;
 
+import android.media.AudioTrack;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import com.badlogic.gdx.audio.io.Mpg123Decoder;
@@ -19,7 +19,6 @@ import org.json.JSONObject;
 import org.vinuxproject.sonic.AndroidAudioDevice;
 import org.vinuxproject.sonic.Sonic;
 
-import java.io.File;
 import java.util.HashMap;
 
 /**
@@ -49,8 +48,8 @@ public class MediaPlus extends CordovaPlugin {
     private int playerState;
     private int currentposition = 0;
 
-    byte samples[] = new byte[8092];
-    byte modifiedSamples[] = new byte[2048];
+    byte samples[] = new byte[10240];
+    byte modifiedSamples[] = new byte[5120];
 
     AndroidAudioDevice device;
     Sonic sonic;
@@ -122,8 +121,9 @@ public class MediaPlus extends CordovaPlugin {
             return true;
         }
         else if ("pausePlayingAudio".equals(action)) {
+//            this.device.track.pause();
             this.playerState = PAUSE;
-            sendStatusChange(MEDIA_STATE, null, 3.0f);
+//            sendStatusChange(MEDIA_STATE, null, 3.0f);
             return true;
         }
         else if ("stopPlayingAudio".equals(action)) {
@@ -144,7 +144,7 @@ public class MediaPlus extends CordovaPlugin {
             return true;
         }
         else if ("seekToAudio".equals(action)) {
-            this.skip(args.getInt(0));
+            skip((int) args.getDouble(0));
             return true;
         }
         else if (action.equals("messageChannel")) {
@@ -160,20 +160,11 @@ public class MediaPlus extends CordovaPlugin {
         this.playerState = ISPLAYING;
         sendStatusChange(MEDIA_STATE, null, 2.0f);
 
-        if (this.thread != null) {
-            try
-            {
-                Thread.sleep(2000L);
-                Log.d("aaa", "stop..........." + this.device.track.getPlayState());
-                Log.d("aaa", "not init");
-            }
-            catch (InterruptedException localInterruptedException)
-            {
-                localInterruptedException.printStackTrace();
-            }
-            return;
-        }
+        if (this.thread != null) return;
 
+        this.totalSamples = 0;
+        this.currentposition = 0;
+        this.mpg123Decoder = new Mpg123Decoder(this.fileHandle);
         this.thread = new Thread(new Runnable() {
             public void run() {
 
@@ -181,8 +172,14 @@ public class MediaPlus extends CordovaPlugin {
 
                 int bytesRead;
                 while(true) {
+
+                    if (playerState == STOP || mpg123Decoder == null) {
+                        thread = null;
+                        break;
+                    }
+
+
                     if (playerState == PAUSE) continue;
-                    if (playerState == STOP) break;
 
                     if (skipAmount != 0) {
                         int i = skipAmount;
@@ -196,31 +193,34 @@ public class MediaPlus extends CordovaPlugin {
 
                     if (bytesRead > 0) {
                         sonic.putBytes(samples, bytesRead);
-
-                        int available = sonic.availableBytes();
-                        if (available > 0)
-                        {
-                            if (modifiedSamples.length < available) {
-                                modifiedSamples = new byte[available * 2];
-                            }
-                            sonic.receiveBytes(modifiedSamples, available);
-                            if ((device != null) && (device.track.getPlayState() == 3)) {
-                                device.writeSamples(modifiedSamples, available);
-                            }
-                        }
-
-                        currentposition = totalSamples / (rate1 * channels);
-                        sendStatusChange(MEDIA_POSITION, null, (float) currentposition);
                     }
                     else {
                         sonic.flush();
                     }
 
+                    int available = sonic.availableBytes();
+                    if (available > 0) {
+                        if (modifiedSamples.length < available) {
+                            Log.d("MUSIC", "modifiedSample Reload");
+                            modifiedSamples = new byte[available * 2];
+                        }
+                        sonic.receiveBytes(modifiedSamples, available);
+                        if ((device != null) && (device.track.getPlayState() == 3)) {
+                            device.writeSamples(modifiedSamples, available);
+                        }
+                    }
+
+                    currentposition = totalSamples / (rate1 * channels);
+                    sendStatusChange(MEDIA_POSITION, null, (float) currentposition);
+
+
                     if (bytesRead <= 0) break;
                 }
 
+                totalSamples = 0;
                 playerState = PLAY_END;
-                stop();
+                thread = null;
+//                stop();
             }
         });
 
@@ -236,15 +236,18 @@ public class MediaPlus extends CordovaPlugin {
 
         if (this.device != null)
         {
+
             this.device.track.flush();
             this.device.track = null;
             this.device = null;
+
+            if (this.mpg123Decoder != null) {
+//                mpg123Decoder.dispose();
+                mpg123Decoder = null;
+            }
+
         }
 
-        if (this.mpg123Decoder != null) {
-//            mpg123Decoder.dispose();
-            mpg123Decoder = null;
-        }
 
         this.thread = null;
     }
