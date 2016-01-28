@@ -30,10 +30,11 @@ public class MediaPlus extends CordovaPlugin {
 
     HashMap<String, AudioPlayer> players;
 
-    public static final int ISPLAYING = 1;
-    public static final int PAUSE = 2;
-    public static final int PLAY_END = 3;
-    public static final int STOP = 0;
+    public static final int MEDIA_STARTING = 1;
+    public static final int MEDIA_PLAYING = 2;
+    public static final int MEDIA_PAUSE = 3;
+    public static final int MEDIA_PLAY_END = 4;
+    public static final int MEDIA_STOP = 0;
 
     private static int MEDIA_STATE = 1;
     private static int MEDIA_DURATION = 2;
@@ -113,6 +114,9 @@ public class MediaPlus extends CordovaPlugin {
 
             sendStatusChange(MEDIA_DURATION, null, (float) this.totallength);
 
+            this.playerState = MEDIA_STARTING;
+            sendStatusChange(MEDIA_STATE, null, (float) this.playerState);
+
             callbackContext.sendPluginResult(new PluginResult(status, "ok"));
             return true;
         }
@@ -121,9 +125,8 @@ public class MediaPlus extends CordovaPlugin {
             return true;
         }
         else if ("pausePlayingAudio".equals(action)) {
-//            this.device.track.pause();
-            this.playerState = PAUSE;
-//            sendStatusChange(MEDIA_STATE, null, 3.0f);
+            this.playerState = MEDIA_PAUSE;
+            sendStatusChange(MEDIA_STATE, null, (float) this.playerState);
             return true;
         }
         else if ("stopPlayingAudio".equals(action)) {
@@ -157,8 +160,8 @@ public class MediaPlus extends CordovaPlugin {
 
     public void play()
     {
-        this.playerState = ISPLAYING;
-        sendStatusChange(MEDIA_STATE, null, 2.0f);
+        this.playerState = MEDIA_PLAYING;
+        sendStatusChange(MEDIA_STATE, null, (float) this.playerState);
 
         if (this.thread != null) return;
 
@@ -173,13 +176,13 @@ public class MediaPlus extends CordovaPlugin {
                 int bytesRead;
                 while(true) {
 
-                    if (playerState == STOP || mpg123Decoder == null) {
+                    if (playerState == MEDIA_STOP || mpg123Decoder == null) {
                         thread = null;
                         break;
                     }
 
 
-                    if (playerState == PAUSE) continue;
+                    if (playerState == MEDIA_PAUSE) continue;
 
                     if (skipAmount != 0) {
                         int i = skipAmount;
@@ -218,7 +221,7 @@ public class MediaPlus extends CordovaPlugin {
                 }
 
                 totalSamples = 0;
-                playerState = PLAY_END;
+                playerState = MEDIA_PLAY_END;
                 thread = null;
 //                stop();
             }
@@ -231,8 +234,8 @@ public class MediaPlus extends CordovaPlugin {
     public void stop()
     {
         Log.d("MUSIC", "STOP..");
-        this.playerState = STOP;
-        sendStatusChange(MEDIA_STATE, null, 4.0f);
+        this.playerState = MEDIA_STOP;
+        sendStatusChange(MEDIA_STATE, null, (float) this.playerState);
 
         if (this.device != null)
         {

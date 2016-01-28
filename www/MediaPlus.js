@@ -24,6 +24,7 @@ var argscheck = require('cordova/argscheck'),
     exec = require('cordova/exec');
 
 var mediaObject = null;
+var mediaTrigger = null;
 
 /**
  * This class provides access to the device media, interfaces to both sound and video
@@ -38,10 +39,9 @@ var mediaObject = null;
  *                                  statusCallback(int statusCode) - OPTIONAL
  */
 var MediaPlus = function(src, successCallback, errorCallback, statusCallback) {
-
-    if (mediaObject) {
-        mediaObject.release();
-    }
+	
+    if (mediaObject) mediaObject.release();
+    if (mediaTrigger) mediaTrigger.release();
 
     this.successCallback = successCallback;
     this.errorCallback = errorCallback;
@@ -58,8 +58,14 @@ var MediaPlus = function(src, successCallback, errorCallback, statusCallback) {
     var fileURL = "cdvfile://localhost/temporary/slk_music/" + src.substring(src.lastIndexOf("/") + 1);
 
     fileTransfer.download(uri, fileURL, function(entry) {
-        me.src = entry.toURL();
-        exec(successCallback, errorCallback, "MediaPlus", "create", [me.src]);
+	    if (cordova.platformId == "android") {
+	        me.src = entry.toURL();
+	        exec(successCallback, errorCallback, "MediaPlus", "create", [me.src]);
+	    }
+	    else {
+		    mediaTrigger = new Media(src, successCallback, errorCallback, statusCallback);
+		    mediaTrigger.play();
+	    }
     }, errorCallback, false, { });
 
 };
@@ -82,34 +88,51 @@ MediaPlus.MEDIA_MSG = ["None", "Starting", "Running", "Paused", "Stopped"];
  * Start or resume playing audio file.
  */
 MediaPlus.prototype.play = function(options) {
-    exec(null, null, "MediaPlus", "startPlayingAudio", [options]);
+    if (cordova.platformId == "android") {
+	    exec(null, null, "MediaPlus", "startPlayingAudio", [options]);
+    }
+    else {
+	    mediaTrigger.play(options);
+    }
 };
 
 /**
  * Stop playing audio file.
  */
 MediaPlus.prototype.stop = function() {
-    var me = this;
-    exec(function() {
-        me._position = 0;
-    }, this.errorCallback, "MediaPlus", "stopPlayingAudio", []);
+    if (cordova.platformId == "android") {
+	    var me = this;
+	    exec(function() {
+	        me._position = 0;
+	    }, this.errorCallback, "MediaPlus", "stopPlayingAudio", []);
+	} else {
+		mediaTrigger.stop();
+	}
 };
 
 /**
  * Seek or jump to a new time in the track..
  */
 MediaPlus.prototype.seekTo = function(milliseconds) {
-    var me = this;
-    exec(function(p) {
-        me._position = p;
-    }, this.errorCallback, "MediaPlus", "seekToAudio", [milliseconds / 1000]);
+    if (cordova.platformId == "android") {
+	    var me = this;
+	    exec(function(p) {
+	        me._position = p;
+	    }, this.errorCallback, "MediaPlus", "seekToAudio", [milliseconds / 1000]);
+	} else {
+		mediaTrigger.seekTo(milliseconds);
+	}
 };
 
 /**
  * Pause playing audio file.
  */
 MediaPlus.prototype.pause = function() {
-    exec(null, this.errorCallback, "MediaPlus", "pausePlayingAudio", []);
+    if (cordova.platformId == "android") {
+    	exec(null, this.errorCallback, "MediaPlus", "pausePlayingAudio", []);
+	} else {
+		mediaTrigger.pause();
+	}
 };
 
 /**
@@ -119,30 +142,47 @@ MediaPlus.prototype.pause = function() {
  * @return      duration or -1 if not known.
  */
 MediaPlus.prototype.getDuration = function() {
-    return this._duration;
+    if (cordova.platformId == "android") {
+    	return this._duration;
+	} else {
+		mediaTrigger.getDuration();
+	}
 };
 
 
 MediaPlus.prototype.setRate = function(rate) {
-    exec(null, null, "MediaPlus", "setRate", [rate]);
+    if (cordova.platformId == "android") {
+    	exec(null, null, "MediaPlus", "setRate", [rate]);
+	} else {
+		mediaTrigger.setRate(rate);
+	}
 };
 
 /**
  * Get position of audio.
  */
 MediaPlus.prototype.getCurrentPosition = function(success, fail) {
-    var me = this;
-    exec(function(p) {
-        me._position = p;
-        success(p);
-    }, fail, "MediaPlus", "getCurrentPositionAudio", []);
+    if (cordova.platformId == "android") {
+	    var me = this;
+	    exec(function(p) {
+	        me._position = p;
+	        success(p);
+	    }, fail, "MediaPlus", "getCurrentPositionAudio", []);
+	} else {
+		mediaTrigger.getCurrentPosition(success, fail);
+	}
 };
 
 /**
  * Release the resources.
  */
 MediaPlus.prototype.release = function() {
-    exec(null, this.errorCallback, "MediaPlus", "release", []);
+    if (cordova.platformId == "android") {
+    	exec(null, this.errorCallback, "MediaPlus", "release", []);
+	} else {
+		mediaTrigger.release();
+		mediaTrigger = undefined;
+	}
 };
 
 /**
