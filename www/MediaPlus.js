@@ -145,7 +145,7 @@ MediaPlus.prototype.getDuration = function() {
     if (cordova.platformId == "android") {
     	return this._duration;
 	} else {
-		mediaTrigger.getDuration();
+		return mediaTrigger.getDuration();
 	}
 };
 
@@ -177,9 +177,9 @@ MediaPlus.prototype.getCurrentPosition = function(success, fail) {
  * Release the resources.
  */
 MediaPlus.prototype.release = function() {
-    if (cordova.platformId == "android") {
-    	exec(null, this.errorCallback, "MediaPlus", "release", []);
-	} else {
+	if (cordova.platformId == "android") {
+		exec(null, this.errorCallback, "MediaPlus", "release", []);
+	} else if(mediaTrigger) {
 		mediaTrigger.release();
 		mediaTrigger = undefined;
 	}
@@ -247,3 +247,5 @@ if (cordova.platformId === 'android' || cordova.platformId === 'amazon-fireos' |
         channel.initializationComplete('onMediaPlusPluginReady');
     });
 }
+
+
