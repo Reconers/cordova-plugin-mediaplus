@@ -222,6 +222,7 @@ public class MediaPlus extends CordovaPlugin {
 
                 totalSamples = 0;
                 playerState = MEDIA_PLAY_END;
+				sendStatusChange(MEDIA_STATE, null, (float) playerState);
                 thread = null;
 //                stop();
             }
